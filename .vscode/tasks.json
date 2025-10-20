@@ -1,0 +1,21 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build (gcc -std=c11)",
+      "type": "shell",
+      "command": "gcc -std=c11 -Wall -Wextra -Wpedantic main.c funcoes.c -o roleta.exe",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [
+        "$gcc"
+      ]
+    }
+  ]
+}
