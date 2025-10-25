@@ -23,7 +23,6 @@ int main(void)
   cfg.listaVencedores = NULL;
   cfg.tamanhoLista = 0;
   cfg.intervaloMax = 0;
-  cfg.probabilidade = 0.0f;
 
   char opcao;        /* Opção do usuário */
   bool sair = false; /* Flag para sair do programa */
