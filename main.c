@@ -8,15 +8,15 @@
 
 /* ============================================
    FunÁ„o: main
-   DescriÁ„o: Fun√ß√£o principal do programa
+   DescriÁ„o: FunÁ„o principal do programa
    Retorno: 0 se executado com sucesso
    ============================================ */
 int main(void)
 {
-  /* Inicializa o gerador de n√∫meros aleat√≥rios */
+  /* Inicializa o gerador de N˙meros aleatÛrios */
   srand((unsigned int)time(NULL));
 
-  /* Declara a estrutura de configura√ß√£o do jogo */
+  /* Declara a estrutura de configuraÁ„o do jogo */
   GameConfig cfg;
 
   /* Inicializa todos os campos para evitar lixo em mem√≥ria */
@@ -24,10 +24,10 @@ int main(void)
   cfg.tamanhoLista = 0;
   cfg.intervaloMax = 0;
 
-  char opcao;        /* Op√ß√£o do usu√°rio */
+  char opcao;        /* opÁ„o do usu√°rio */
   bool sair = false; /* Flag para sair do programa */
 
-  /* Limpa a tela no in√≠cio do programa */
+  /* Limpa a tela no inicio do programa */
   limparTela();
 
   /* Loop principal do programa */
@@ -49,12 +49,12 @@ int main(void)
     switch (opcao)
     {
     case '1':
-      /* Op√ß√£o 1: Configurar Jogo */
+      /* OpÁ„o 1: Configurar Jogo */
       configurarJogo(&cfg);
       break;
 
     case '2':
-      /* Op√ß√£o 2: Jogar Uma Vez */
+      /* OpÁ„o 2: Jogar Uma Vez */
       if (cfg.listaVencedores == NULL)
       {
         limparTela();
@@ -86,18 +86,18 @@ int main(void)
       break;
 
     case '3':
-      /* Op√ß√£o 3: Sair */
+      /* OpÁ„o 3: Sair */
       sair = true;
       break;
 
     default:
-      /* Op√ß√£o inv√°lida */
+      /* OpÁ„o inv√°lida */
       printf("  [ERRO] Opcao invalida. Escolha novamente.\n");
       break;
     }
   } while (!sair);
 
-  /* Libera mem√≥ria antes de encerrar */
+  /* Libera memÛria antes de encerrar */
   liberarConfig(&cfg);
 
   printf("\n  Obrigado por jogar! Ate logo!\n\n");

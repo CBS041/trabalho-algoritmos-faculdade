@@ -1,11 +1,11 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
-/* Estrutura de configuraÃ§Ã£o do jogo - Roleta Russa */
+/* Estrutura de configuração do jogo - Roleta Russa */
 typedef struct GameConfig {
-    int *listaVencedores;    // Ponteiro para array de nÃºmeros vencedores
-    int tamanhoLista;        // Quantidade de nÃºmeros vencedores
-    int intervaloMax;        // NÃºmero mÃ¡ximo para sorteio
+    int *listaVencedores;    // Ponteiro para array de números vencedores
+    int tamanhoLista;        // Quantidade de números vencedores
+    int intervaloMax;        // número máximo para sorteio
 } GameConfig;
 
 #endif /* STRUCTS_H */

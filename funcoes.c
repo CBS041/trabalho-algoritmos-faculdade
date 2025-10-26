@@ -7,8 +7,8 @@
 #include "funcoes.h"
 
 /*
-   FUNÃ‡ÃƒO: limparTela
-   DescriÃ§Ã£o: Limpa o terminal/console
+   Função: limparTela
+   Descrição: Limpa o terminal/console
   */
 
 void limparTela(void)
