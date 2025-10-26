@@ -7,8 +7,8 @@
 #include "structs.h"
 
 /* ============================================
-   FUNÇÃO: main
-   Descrição: Função principal do programa
+   Fun��o: main
+   Descri��o: Função principal do programa
    Retorno: 0 se executado com sucesso
    ============================================ */
 int main(void)
@@ -23,7 +23,6 @@ int main(void)
   cfg.listaVencedores = NULL;
   cfg.tamanhoLista = 0;
   cfg.intervaloMax = 0;
-  cfg.probabilidade = 0.0f;
 
   char opcao;        /* Opção do usuário */
   bool sair = false; /* Flag para sair do programa */

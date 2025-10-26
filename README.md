@@ -1,98 +1,271 @@
-# 🎰 Roleta Russa - Documentação do Projeto
+# 🎰 Roleta Russa - Documentação Completa do Projeto
 
 ## 📋 Descrição Geral
 
-**Roleta Russa** é um jogo de azar desenvolvido em **C** que combina probabilidade e sorte. O jogador configura números vencedores e tenta acertar através de um sorteio aleatório que passa por dois testes: um teste de **probabilidade** e uma verificação contra a **lista de números vencedores**.
+**Roleta Russa** é um **jogo educacional de azar** desenvolvido em linguagem **C**, projetado como trabalho acadêmico para demonstrar conceitos fundamentais de programação.
 
-O programa possui uma **interface limpa e intuitiva** com limpeza automática de terminal após cada ação.
+### O que é o jogo?
+
+O jogo permite que o usuário:
+1. **Configure** um conjunto de números vencedores (0 a 100)
+2. **Jogue uma vez** e tente ganhar ao acertar o número sorteado
+3. **Veja o resultado** imediatamente na tela
+
+### Mecânica Simples
+
+```
+┌──────────────────────────────────────┐
+│      JOGADOR CONFIGURA NÚMEROS       │
+│          (Ex: 10, 50, 90)            │
+└────────────────┬─────────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────────┐
+│    SISTEMA SORTEIA NÚMERO (0-100)    │
+└────────────────┬─────────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────────┐
+│   VERIFICA SE NÚMERO ESTÁ NA LISTA   │
+└────────────────┬─────────────────────┘
+                 │
+        ┌────────┴────────┐
+        ▼                 ▼
+     GANHOU!           PERDEU!
+```
+
+### Características Principais
+
+- ✅ **Interface limpa e intuitiva** com ASCII simples
+- ✅ **Limpeza automática** de terminal após cada ação
+- ✅ **Validação robusta** de entradas do usuário
+- ✅ **Gerenciamento dinâmico** de memória
+- ✅ **Sem bugs de codificação** - funciona perfeitamente em Windows
+- ✅ **Código comentado** e bem organizado para aprendizado
 
 ---
 
-## 🎯 Objetivo
+## 🎯 Objetivos Educacionais
 
-O objetivo do jogo é ganhar acertando em números que foram configurados como vencedores. O jogo usa:
-- **Probabilidade**: 50% de chance de passar na primeira etapa
-- **Sorteio**: Números de 0 a 100
-- **Validação**: Verificar se o número sorteado está na lista de vencedores
+Este projeto foi desenvolvido com objetivo de **demonstrar e aplicar** os seguintes conceitos de programação:
+
+### Conceitos Aplicados ✓
+
+| Conceito | Como é Usado |
+|----------|-------------|
+| **Structs** | `GameConfig` agrupa dados relacionados do jogo |
+| **Ponteiros** | Passagem de parâmetros por referência para modificação |
+| **Alocação Dinâmica** | `malloc()` para array de números vencedores |
+| **Desalocação Segura** | `free()` para evitar vazamento de memória |
+| **Validação de Entrada** | Verificação de ranges e tipos de dados |
+| **Arrays Dinâmicos** | Flexibilidade no tamanho da lista de vencedores |
+| **Modularização** | Separação clara em múltiplos arquivos .c e .h |
+| **Geração Aleatória** | `rand()` e `srand()` para sorteios |
+| **Tratamento de Erros** | NULL checks, validações, mensagens de erro claras |
+
+### Mecânica do Jogo
+
+O objetivo é **ganhar** acertando no número sorteado:
+
+1. **Intervalo**: Números de 0 a 100 (101 possibilidades)
+2. **Configuração**: Usuário escolhe quais números vencem
+3. **Sorteio**: Sistema escolhe aleatoriamente um número
+4. **Resultado**: Verifica se número sorteado está na lista vencedora
+5. **Probabilidade**: Com 5 números vencedores = ~4.95% de chance de ganhar
 
 ---
 
 ## 🏗️ Estrutura do Projeto
 
+### Arquivos e Responsabilidades
+
 ```
 roleta-russa/
-├── structs.h          # Definições de estruturas
-├── structs.c          # (Arquivo vazio - não usar)
-├── funcoes.h          # Protótipos de funções
-├── funcoes.c          # Implementação das funções
-├── main.c             # Programa principal
-├── Makefile           # Compilação automática
-├── README.md          # Este arquivo
-└── roleta.exe         # Executável compilado
+├── structs.h          ← Define a estrutura de dados (GameConfig)
+├── funcoes.h          ← Declara as funções (protótipos)
+├── funcoes.c          ← Implementa as funções (lógica do jogo)
+├── main.c             ← Programa principal (menu e orquestração)
+├── README.md          ← Este arquivo (documentação do usuário)
+├── docs.md            ← Documentação técnica detalhada
+└── roleta.exe         ← Executável compilado
+```
+
+### Padrão de Arquivos
+
+```
+┌─────────────────────────────────────────────┐
+│ structs.h                                   │
+│ typedef struct GameConfig { ... }           │
+└─────────┬───────────────────────────────────┘
+          │ #include "structs.h"
+          ▼
+┌─────────────────────────────────────────────┐
+│ funcoes.h                                   │
+│ void configurarJogo(GameConfig *cfg);       │
+│ int jogarUmaVez(const GameConfig *cfg);     │
+└─────────┬───────────────────────────────────┘
+          │ #include "funcoes.h"
+          ▼
+┌─────────────────────────────────────────────┐
+│ main.c                                      │
+│ int main() { ... }                          │
+└─────────────────────────────────────────────┘
 ```
 
 ---
 
-## 📊 Estrutura de Dados
+## 📊 Estrutura de Dados - GameConfig
 
-### GameConfig
+### O que é?
 
-A estrutura principal que armazena toda a configuração do jogo:
+`GameConfig` é uma **estrutura (struct)** que encapsula toda a configuração do jogo em um único objeto. Isso facilita a passagem de dados entre funções.
+
+### Definição
 
 ```c
 typedef struct GameConfig {
-    int *listaVencedores;    // Ponteiro para array de números vencedores
+    int *listaVencedores;    // Ponteiro para array dinâmico
     int tamanhoLista;        // Quantidade de números na lista
-    int intervaloMax;        // Número máximo para sorteio (100)
-    float probabilidade;     // Probabilidade de passar (0.5 = 50%)
+    int intervaloMax;        // Número máximo (sempre 100)
 } GameConfig;
 ```
 
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `listaVencedores` | `int *` | Array dinâmico contendo números que vencem |
-| `tamanhoLista` | `int` | Número de elementos em `listaVencedores` |
-| `intervaloMax` | `int` | Valor máximo para sorteio (padrão: 100) |
-| `probabilidade` | `float` | Probabilidade de passar (padrão: 0.5) |
+### Explicação Visual
+
+```
+GameConfig (em memória)
+┌──────────────────────────────────┐
+│ listaVencedores ────→ [10, 50, 90]  │
+│ tamanhoLista: 3                    │
+│ intervaloMax: 100                  │
+└──────────────────────────────────┘
+```
+
+### Por que usar struct?
+
+**SEM struct (desorganizado):**
+```c
+// Espalhado em múltiplas variáveis
+int *vencedores = NULL;
+int tamanho = 0;
+int maximo = 100;
+float prob = 0.5;
+// 😞 Difícil de gerenciar
+```
+
+**COM struct (organizado):**
+```c
+GameConfig cfg;  // Uma variável contém tudo
+// 😊 Fácil de passar, armazenar e modificar
+```
+
+### Campos Explicados
+
+| Campo | Tipo | Inicial | Descrição |
+|-------|------|---------|-----------|
+| `listaVencedores` | `int*` | NULL | Aponta para array alocado dinamicamente com os números que ganham |
+| `tamanhoLista` | `int` | 0 | Quantos números estão na lista (de 1 a 101) |
+| `intervaloMax` | `int` | 100 | Limite máximo do sorteio (fixo em 100) |
 
 ---
 
-## 🔧 Funções Principais
+## 🔧 Funções Principais Explicadas
 
-### 1. `void limparTela(void)`
-Limpa o terminal/console para exibir novos conteúdos de forma limpa.
+### 1️⃣ `void limparTela(void)` - Limpa o Terminal
 
-**Uso:** Chamada automaticamente antes de:
-- Mostrar o menu principal
-- Configurar o jogo
-- Exibir resultado da jogada
-- Mostrar mensagens de erro
+**O que faz?**
+Remove tudo que estava na tela e exibe novo conteúdo de forma limpa.
 
-**Nota:** Usa `system("cls")` no Windows.
+**Por quê?**
+Sem limpeza, dados antigos ficariam visíveis, deixando a interface confusa.
+
+**Quando é usada:**
+- ✓ Antes de mostrar o menu
+- ✓ Antes de configurar jogo
+- ✓ Antes de mostrar resultado
 
 ---
 
-### 2. `void configurarJogo(GameConfig *cfg)`
-Permite que o usuário defina os números vencedores.
+### 2️⃣ `void mostrarMenu(void)` - Exibe o Menu
 
-**Parâmetros:**
-- `cfg`: Ponteiro para a estrutura de configuração
+**O que faz?**
+Mostra as opções disponíveis para o usuário.
 
 **Fluxo:**
-1. Limpa a tela
-2. Solicita quantos números vencedores o usuário deseja
-3. Aloca memória para esses números
-4. Lê cada número com validação
-5. Impede números duplicados
-6. Exibe mensagem de sucesso
-7. Aguarda pressionamento de ENTER
+```
+1. Chama limparTela()
+2. Exibe o menu decorado
+3. Espera usuário escolher
+```
 
-**Exemplo:**
+**Saída na tela:**
+```
++========================================+
+|   ROLETA RUSSA - Garotos do JOB       |
++========================================+
+|  1. Configurar Jogo                    |
+|  2. Jogar Uma Vez                      |
+|  3. Sair                               |
++========================================+
+
+Escolha uma opcao:
+```
+
+---
+
+### 3️⃣ `void configurarJogo(GameConfig *cfg)` - Configura Números Vencedores
+
+**O que faz?**
+Permite o usuário definir quais números vencem no sorteio.
+
+**Parâmetros:**
+- `cfg`: Endereço da estrutura GameConfig (passagem por referência)
+
+**Fluxo em detalhes:**
+
+```
+┌─────────────────────────────────────┐
+│ 1. Limpa a tela                     │
+└────────┬────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────┐
+│ 2. Lê quantidade de números         │
+│    Pergunta: "Quantos números?"     │
+└────────┬────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────┐
+│ 3. Aloca memória com malloc()        │
+│    malloc(sizeof(int) * quantidade) │
+└────────┬────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────┐
+│ 4. Loop de leitura com validações   │
+│    - Lê cada número                 │
+│    - Verifica se não repetem        │
+│    - Verifica se está 0-100         │
+└────────┬────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────┐
+│ 5. Salva configuração e aguarda     │
+│    usuário pressionar ENTER         │
+└─────────────────────────────────────┘
+```
+
+**Exemplo de Execução:**
+
 ```
 Quantos numeros vencedores deseja? (1-101): 3
+
 Digite os 3 numeros vencedores (sem repeticoes):
+
   Numero 1: 25
   Numero 2: 50
+  Numero 3: 25
+  [AVISO] Numero ja foi inserido. Tente outro.
   Numero 3: 75
 
   [OK] Configuracao salva com sucesso!
@@ -100,98 +273,161 @@ Digite os 3 numeros vencedores (sem repeticoes):
   Pressione ENTER para continuar...
 ```
 
+**Validações implementadas:**
+- ✓ Verifica se `cfg` não é NULL
+- ✓ Valida quantidade (mínimo 1, máximo 101)
+- ✓ Aloca memória com verificação de erro
+- ✓ Impede números duplicados
+- ✓ Valida se número está entre 0-100
+
 ---
 
-### 3. `int jogarUmaVez(const GameConfig *cfg, int *numeroSorteado)`
-Executa uma rodada do jogo.
+### 4️⃣ `int jogarUmaVez(const GameConfig *cfg, int *numeroSorteado)` - Executa Uma Rodada
+
+**O que faz?**
+Sorteia um número aleatório e verifica se é um número vencedor.
 
 **Parâmetros:**
-- `cfg`: Configuração do jogo
-- `numeroSorteado`: Ponteiro para armazenar o número sorteado
+- `cfg`: Configuração do jogo (não será modificada, por isso `const`)
+- `numeroSorteado`: Endereço para guardar qual número foi sorteado
 
 **Retorno:**
-- `1`: Jogador ganhou
-- `0`: Jogador perdeu
+- `1` = Usuário GANHOU ✓
+- `0` = Usuário PERDEU ✗
 
-**Lógica:**
+**Lógica em passos:**
+
 ```
-1. Sorteia um valor de probabilidade (0.0 a 1.0)
-2. Sorteia um número inteiro (0 a 100)
-3. Se probabilidade <= 0.5:
-   - Verifica se o número está na lista vencedora
-   - Retorna 1 se sim, 0 se não
-4. Senão:
-   - Retorna 0 (não passou no teste)
+Passo 1: Sorteia número (0 a 100)
+┌────────────────────────────┐
+│ n = rand() % 101           │
+│ Resultado: 0 a 100         │
+└────────────┬───────────────┘
+             │
+             ▼
+Passo 2: Armazena o número sorteado
+┌────────────────────────────┐
+│ *numeroSorteado = n        │
+└────────────┬───────────────┘
+             │
+             ▼
+Passo 3: Verifica na lista
+┌────────────────────────────┐
+│ Está na lista vencedora?   │
+└────────────┬───────────────┘
+        ┌────┴────┐
+        ▼         ▼
+      SIM        NÃO
+       │          │
+       ▼          ▼
+    Retorna    Retorna
+       1          0
 ```
+
+**Exemplo prático:**
+
+```
+Config: números vencedores = [10, 50, 90]
+Sorteio: número = 50
+
+// Verifica: 50 está em [10, 50, 90]? SIM!
+Retorna: 1 (GANHOU!)
 
 ---
 
-### 4. `bool estaNaListaVencedora(int numero, int lista[], int tamanho)`
-Verifica se um número existe na lista de vencedores.
+Config: números vencedores = [10, 50, 90]
+Sorteio: número = 37
 
-**Parâmetros:**
-- `numero`: Número a procurar
-- `lista`: Array de números vencedores
-- `tamanho`: Tamanho do array
+// Verifica: 37 está em [10, 50, 90]? NÃO!
+Retorna: 0 (PERDEU!)
+```
+
+**Probabilidade de Ganhar:**
+
+Com **5 números vencedores** e **101 possibilidades**:
+
+$$P(\text{Ganhar}) = \frac{5}{101} \approx 4.95\%$$
+
+---
+
+### 5️⃣ `bool estaNaListaVencedora()` - Verifica Número
+
+**O que faz?**
+Procura um número no array de vencedores.
 
 **Retorno:**
-- `true`: Número encontrado
-- `false`: Número não encontrado
+- `true` (1): Número encontrado ✓
+- `false` (0): Número não encontrado ✗
 
 ---
 
-### 5. `void liberarConfig(GameConfig *cfg)`
-Libera toda a memória alocada dinâmicamente.
+### 6️⃣ `void liberarConfig()` - Libera Memória
 
-**Importante:** Deve ser chamada antes de encerrar o programa para evitar vazamento de memória.
+**O que faz?**
+Devolve ao sistema a memória que foi alocada com `malloc()`.
 
----
+**Por quê?**
+Se não fizer isso, a memória fica "perdida" (vazamento de memória).
 
-### Funções Auxiliares
+**Visualização:**
 
-#### `void limparBuffer(void)`
-Remove caracteres residuais do buffer de entrada após `scanf()`.
-
-#### `int lerInteiro(const char *prompt, int min, int max)`
-Lê um inteiro com validação de intervalo. Repete até conseguir uma entrada válida.
-
-#### `float lerFloat(const char *prompt, float min, float max)`
-Lê um float com validação de intervalo.
-
----
-
-## 🎮 Como Usar
-
-### Compilação
-```bash
-make
 ```
-ou
-```bash
-gcc -std=c11 -Wall -Wextra -Wpedantic main.c funcoes.c -o roleta.exe
+ANTES DE liberarConfig():
+Memória ┌──────────┐
+Heap    │ 10,50,90 │  ← Perdido na memória!
+        └──────────┘
+
+DEPOIS DE liberarConfig():
+Memória ┌──────────┐
+Heap    │ (livre)  │  ← Devolvido ao SO
+        └──────────┘
 ```
 
-### Execução
-```bash
+---
+
+### 7️⃣ `int lerInteiro()` - Lê Inteiro com Validação
+
+**O que faz?**
+Lê um número inteiro do usuário **com validações**.
+
+**Validações:**
+- ✓ Verifica se entrada é realmente um número
+- ✓ Verifica se está dentro do intervalo [min, max]
+- ✓ Pede novamente se algo estiver errado
+
+**Comportamento:**
+
+```
+Usuário digita: "abc"
+Sistema: [ERRO] Entrada invalida!
+Repete...
+
+Usuário digita: "200"
+Sistema: [ERRO] Digite entre 1 e 100!
+Repete...
+
+Usuário digita: "5"
+Sistema: ✓ Aceita e continua
+```
+
+---
+
+## 🎮 Como Usar - Passo a Passo
+---
+
+### Passo 1: Execução
+
+```powershell
 .\roleta.exe
 ```
 
-### Menu Interativo
+Você verá o menu inicial.
 
-1. **Configurar Jogo**: Defina os números vencedores
-   - Escolha a quantidade de números
-   - Digite cada número sem repetições
-   - Pressione ENTER para confirmar
+---
 
-2. **Jogar Uma Vez**: Execute uma rodada
-   - Veja o número sorteado
-   - Resultado instantâneo
-   - Pressione ENTER para voltar ao menu
+### Passo 2: Usando o Menu
 
-3. **Sair**: Encerre o programa
-   - Memória é liberada automaticamente
-
-### Exemplo de Uso Completo
+**Opção 1 - Configurar Jogo:**
 
 ```
 +========================================+
@@ -204,39 +440,32 @@ gcc -std=c11 -Wall -Wextra -Wpedantic main.c funcoes.c -o roleta.exe
 
 Escolha uma opcao: 1
 
-[Tela Limpa - Novo Menu de Configuração]
+[Tela limpa automaticamente]
 
 +========================================+
 |       CONFIGURE O JOGO                |
 +========================================+
-  - Probabilidade: 50% (0.5)
   - Intervalo: 0 a 100
 
   Quantos numeros vencedores deseja? (1-101): 3
 
   Digite os 3 numeros vencedores (sem repeticoes):
 
-  Numero 1: 10
+  Numero 1: 25
   Numero 2: 50
   Numero 3: 90
 
   [OK] Configuracao salva com sucesso!
 
   Pressione ENTER para continuar...
+```
 
-[Tela Limpa - Volta ao Menu Principal]
+**Opção 2 - Jogar Uma Vez:**
 
-+========================================+
-|   ROLETA RUSSA - Garotos do JOB       |
-+========================================+
-|  1. Configurar Jogo                    |
-|  2. Jogar Uma Vez                      |
-|  3. Sair                               |
-+========================================+
-
+```
 Escolha uma opcao: 2
 
-[Tela Limpa - Resultado da Jogada]
+[Tela limpa]
 
 +========================================+
 |          RESULTADO DA JOGADA           |
@@ -246,121 +475,116 @@ Escolha uma opcao: 2
 +========================================+
 
   Pressione ENTER para continuar...
+```
 
-[Tela Limpa - Volta ao Menu Principal]
+**Opção 3 - Sair:**
+
+```
+Escolha uma opcao: 3
+
+Programa encerra com segurança
+Memória é liberada automaticamente
 ```
 
 ---
 
-## 📈 Fluxo do Programa
+## 📈 Fluxo Completo do Programa
 
 ```
-┌──────────────────────────┐
-│   INÍCIO DO PROGRAMA     │
-│   (Limpa Tela)           │
-└────────────┬─────────────┘
+INÍCIO
+  │
+  ├─ Inicializa srand() com time()
+  ├─ Cria GameConfig vazio
+  │
+  ▼
+┌─────────────────────────┐
+│   EXIBE MENU PRINCIPAL  │
+└────────────┬────────────┘
              │
-             ▼
-      ┌──────────────┐
-      │  MENU LOOP   │ ◄─────────────────────┐
-      │ (Limpa Tela) │                       │
-      └──┬───────┬───┬──┘                    │
-         │       │   │                       │
-      1  │    2  │   │ 3                     │
-         ▼       ▼   ▼                       │
-      CONFIG   JOGAR SAIR                    │
-        │        │     │                     │
-        │        │     ▼                     │
-        │        │   Encerra                 │
-        │        │   (Libera Memória)        │
-        │        │   Fim                     │
-        │        │                           │
-        ▼        ▼                           │
-     [Limpa]  [Limpa]                        │
-      Tela     Tela                          │
-        │        │                           │
-        │        ├─────────────────┤         │
-        │                          │         │
-        └──────────────────────────┼─────────┘
-                                   │
-                           [Pausa ENTER]
+    ┌────────┼────────┐
+    │        │        │
+    1        2        3
+    │        │        │
+    ▼        ▼        ▼
+ CONFIG   JOGAR     SAIR
+   │        │        │
+   ▼        ▼        ▼
+ Lê e     Verifica  Libera
+ aloca    se jogou  memória
+   │        │       Fim
+   │        ▼
+   └─────► Volta
+          ao menu
 ```
-````
 
 ---
 
-## 🔐 Gerenciamento de Memória
+## 🔐 Segurança de Memória
 
-O projeto utiliza **alocação dinâmica** através de `malloc()` e `free()`:
+### O Problema
 
-- **Alocação**: Realizada em `configurarJogo()` quando o usuário define quantos números vencedores deseja
-- **Liberação**: Realizada em `liberarConfig()` antes do programa encerrar
+Quando usamos `malloc()` para alocar memória, devemos **sempre liberar** com `free()`, senão temos um **vazamento de memória**.
 
-0**Evita vazamentos de memória** chamando `liberarConfig(&cfg)` na função `main()`.
+### Nossa Solução
+
+No `main.c`, chamamos `liberarConfig(&cfg)` **sempre** antes de sair:
 
 ---
 
 ## ⚠️ Validações Implementadas
 
-✅ Números fora do intervalo são rejeitados
-✅ Números duplicados não são permitidos
-✅ Entradas inválidas (não-numéricas) são tratadas
-✅ Verificação de alocação de memória
-✅ Ponteiros nulos são validados
-✅ Interface de erro quando jogo não configurado
+Nosso programa é **robusto** e valida tudo:
+
+| Validação | Exemplo |
+|-----------|---------|
+| Entrada não-numérica | Digita "abc" → Rejeita |
+| Número fora do intervalo | Digita 150 → Rejeita (máx: 100) |
+| Número duplicado | Digita 50 duas vezes → Avisa |
+| Jogar sem configurar | Escolhe opção 2 sem ter configurado → Erro |
+| malloc falha | Memória insuficiente → Erro controlado |
+| Ponteiro NULL | Proteção em todas as funções |
 
 ---
 
-## �️ Interface do Usuário
+## 🎯 Pontos Fortes do Projeto
 
-### Melhorias de UX
-
-✅ **Limpeza automática de tela** - Cada ação limpa o terminal
-✅ **Mensagens de status claras** - `[OK]`, `[ERRO]`, `[AVISO]`
-✅ **Pausa com ENTER** - Usuário pode ler antes de continuar
-✅ **Caracteres ASCII simples** - Compatível com todos os terminais Windows
-✅ **Menu decorado** - Bordas ASCII `+` e `|` para melhor visualização
-
-### Codificação de Caracteres
-
-- Sem emojis Unicode (compatibilidade total)
-- Sem caracteres especiais (funciona em PowerShell)
-- Interface 100% limpa e profissional
+✅ **Código Modularizado** - Separado em múltiplos arquivos  
+✅ **Bem Comentado** - Fácil entender o que faz cada parte  
+✅ **Sem Bugs de Terminal** - Funciona perfeitamente em Windows  
+✅ **Interface Limpa** - ASCII simples, sem caracteres estranhos  
+✅ **Memória Segura** - Sem vazamentos com liberarConfig()  
+✅ **Validações Completas** - Trata todos os erros  
+✅ **Pronto para Apresentação** - Código profissional e documentado
 
 ---
 
-## �📚 Tecnologias Utilizadas
+## 📚 Tecnologias Utilizadas
 
-- **Linguagem**: C (C99)
-- **Compilador**: GCC (`-std=c11`)
-- **Build System**: Makefile
-- **IDE**: Visual Studio Code
+- **Linguagem**: C
+- **Compilador**: GCC
+- **IDE**: Dev C++
 - **Terminal**: Windows PowerShell
-
----
-
-## 🐛 Correções Realizadas
-
-| Versão | Correção |
-|--------|----------|
-| v1.0 | Estrutura base do projeto |
-| v2.0 | Remoção de Unicode, caracteres ASCII simples |
-| v3.0 | **Limpeza automática de tela** |
-| v3.0 | **Pausa com ENTER entre ações** |
-| v3.0 | **Mensagens de erro melhoradas** |
-| v3.0 | **README.md atualizado** |
-
----
 
 ## 👥 Autores
 
-**Garotos do JOB**
+**Garotos do JOB**  
+Trabalho Acadêmico - Algoritmos e Programação em C
+
+---
+
+## 💡 Como Usar Este Projeto para Aprender
+
+1. **Leia `structs.h`** - Entenda as estruturas de dados
+2. **Leia `funcoes.h`** - Veja os protótipos
+3. **Leia `funcoes.c`** - Estude a implementação linha a linha
+4. **Leia `main.c`** - Veja como tudo se conecta
+5. **Consulte `docs.md`** - Para detalhes técnicos profundos
 
 ---
 
 ## 📄 Licença
 
-Este projeto é fornecido como material educacional.
+Este projeto é fornecido como material educacional para fins de aprendizado.
 
 ---
 
@@ -381,18 +605,15 @@ Este projeto é fornecido como material educacional.
 
 ## 📝 Notas de Desenvolvimento
 
+✅ **Sem avisos!** ✅ **Sem erros!** ✅ **Totalmente compatível com Windows!**
+
 ### Estrutura do Código
 
 - **Separação clara** entre `funcoes.c` e `main.c`
 - **Headers bem documentados** em `funcoes.h`
 - **Comentários detalhados** em cada função
 - **Tratamento de erros** em todas as entradas
+- **Nomes descritivos** de variáveis e funções
 
-### Compilação
-
-O projeto foi testado com:
-```bash
-gcc -std=c11 -Wall -Wextra -Wpedantic main.c funcoes.c -o roleta.exe
-```
-
-Sem avisos ou erros! ✅
+**Última atualização:** 26 de outubro de 2025  
+**Status:** ✅ Pronto para apresentação

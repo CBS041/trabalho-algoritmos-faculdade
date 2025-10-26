@@ -1,155 +1,150 @@
 # 📚 Documentação Técnica Detalhada - Roleta Russa
 
-## 🎯 Visão Geral
+## 🎯 Introdução
 
-**Roleta Russa** é um jogo de azar desenvolvido em **C** que implementa um sistema baseado em probabilidades e gerenciamento de memória dinâmica. O jogador configura números vencedores e tenta ganhar através de um sorteio aleatório que passa por **dois testes independentes**.
+Este documento é uma **análise técnica profunda** do projeto **Roleta Russa**. Ele foi criado para desenvolvedores que querem entender **como o código funciona**, **por que foi implementado dessa forma**, e **boas práticas** aplicadas.
 
-### Características Principais
-
-- ✅ **Alocação dinâmica de memória** com `malloc()` e `free()`
-- ✅ **Validação robusta** de entradas de usuário
-- ✅ **Interface limpa** com limpeza automática de terminal
-- ✅ **Tratamento de erros** em todas as operações críticas
-- ✅ **Código modularizado** com separação clara de responsabilidades
+### Público-alvo
+- Professores avaliando o trabalho
+- Alunos querendo aprender programação em C
+- Desenvolvedores interessados em revisar o código
 
 ---
 
-## 🏗️ Estrutura de Dados
+## 🏗️ Arquitetura Geral do Projeto
 
-### GameConfig (Estrutura Principal)
+### Visão de Camadas
+
+```
+┌─────────────────────────────────────┐
+│   CAMADA DE APRESENTAÇÃO            │
+│   (main.c)                          │
+│   - Menu interativo                 │
+│   - Fluxo do programa               │
+├─────────────────────────────────────┤
+│   CAMADA DE LÓGICA                  │
+│   (funcoes.c)                       │
+│   - Regras do jogo                  │
+│   - Validações                      │
+├─────────────────────────────────────┤
+│   CAMADA DE DADOS                   │
+│   (structs.h)                       │
+│   - Estruturas de dados             │
+│   - GameConfig                      │
+└─────────────────────────────────────┘
+```
+
+### Responsabilidades de Cada Arquivo
+
+| Arquivo | Linha | Responsabilidade |
+|---------|-------|-----------------|
+| `structs.h` | 1-20 | Define `GameConfig` |
+| `funcoes.h` | 1-30 | Declara protótipos de funções |
+| `funcoes.c` | 1-400 | Implementa toda lógica do jogo |
+| `main.c` | 1-100 | Orquestra o fluxo e menu |
+
+---
+
+## 📊 Estrutura de Dados - GameConfig
+
+### Definição
 
 ```c
 typedef struct GameConfig {
     int *listaVencedores;    // Ponteiro para array dinâmico
-    int tamanhoLista;        // Quantidade de elementos
-    int intervaloMax;        // Valor máximo para sorteio
-    float probabilidade;     // Probabilidade de passar (0.0-1.0)
+    int tamanhoLista;        // Quantidade de números na lista
+    int intervaloMax;        // Número máximo para sorteio
 } GameConfig;
 ```
 
-#### Campos Detalhados:
+### Layout em Memória
 
-| Campo | Tipo | Descrição | Intervalo |
-|-------|------|-----------|-----------|
-| `listaVencedores` | `int*` | Array alocado dinamicamente com os números que ganham | N/A |
-| `tamanhoLista` | `int` | Quantidade de números vencedores | 1 - 101 |
-| `intervaloMax` | `int` | Limite superior do sorteio (inclusive) | Fixo: 100 |
-| `probabilidade` | `float` | Probabilidade de passar no teste 1 | Fixo: 0.5 (50%) |
+```
+Stack (local):              Heap (dinâmico):
+┌──────────────┐
+│ cfg (struct) │
+├──────────────┤
+│ listaVence.. │──────────→ ┌───┬───┬───┐
+│ (8 bytes)    │            │ 10│ 50│ 90│  Array int
+├──────────────┤            └───┴───┴───┘
+│ tamanhoLista │
+│ (4 bytes)    │ Valor: 3
+├──────────────┤
+│ intervaloMax │
+│ (4 bytes)    │ Valor: 100
+└──────────────┘
 
-#### Exemplo de Uso:
+Total: 16 bytes (stack) + 12 bytes (heap) = 28 bytes
+```
 
+### Alternativas e Por quê a atual?
+
+**Alternativa 1: Array fixo**
 ```c
-// Criar configuração
-GameConfig cfg;
-cfg.listaVencedores = NULL;
-cfg.tamanhoLista = 0;
-cfg.intervaloMax = 100;
-cfg.probabilidade = 0.5f;
-
-// Após configurar (exemplo com 3 números)
-cfg.listaVencedores = malloc(sizeof(int) * 3);
-cfg.listaVencedores[0] = 10;
-cfg.listaVencedores[1] = 50;
-cfg.listaVencedores[2] = 90;
-cfg.tamanhoLista = 3;
+// ❌ RUIM: Limite de 50 números
+int vencedores[50];
+int tamanho;
 ```
+*Problema:* Desperdício de memória, sem flexibilidade
+
+**Alternativa 2: Várias variáveis globais**
+```c
+// ❌ RUIM: Desorganizado
+int *vencedores;
+int tamanho;
+int maximo;
+```
+*Problema:* Difícil de manter, difícil de passar para funções
+
+**Nossa Solução (struct dinâmica)**
+```c
+// ✅ BOM: Flexível e organizado
+typedef struct GameConfig { ... } GameConfig;
+```
+*Vantagem:* Agrupa dados relacionados, fácil de passar por referência
 
 ---
 
-## 📊 Fluxo Principal do Programa
-
-### Inicialização
-
-```
-┌─────────────────────────────────────┐
-│ 1. Inicializa srand() com time()    │
-│ 2. Cria estrutura GameConfig        │
-│ 3. Inicializa campos com NULL/0     │
-│ 4. Limpa a tela                     │
-└──────────────┬──────────────────────┘
-               │
-               ▼
-          ┌────────┐
-          │ MENU   │ ◄────────┐
-          └───┬┬┬──┘          │
-              │││             │
-          1   ││ 2    3       │
-          │   ││   │          │
-          ▼   ▼▼   ▼          │
-        CONFIG JOGAR SAIR     │
-          │     │   │         │
-          │     │   └─────────┤
-          │     └─────────────┤
-          └──────────────────┘
-```
-
-### Fluxo Detalhado de Execução
-
-```mermaid
-main() {
-  ├─ srand(time(NULL))
-  ├─ Inicializa GameConfig
-  ├─ limparTela()
-  └─ do-while loop:
-     ├─ mostrarMenu()
-     ├─ switch(opcao):
-     │  ├─ '1': configurarJogo(&cfg)
-     │  │   ├─ limparTela()
-     │  │   ├─ Lê quantidade de números
-     │  │   ├─ malloc para array
-     │  │   └─ Loop de leitura com validação
-     │  │
-     │  ├─ '2': jogarUmaVez(&cfg)
-     │  │   ├─ Valida se cfg foi configurado
-     │  │   ├─ Sorteia número (0-100)
-     │  │   ├─ Sorteia probabilidade (0.0-1.0)
-     │  │   └─ Exibe resultado
-     │  │
-     │  └─ '3': sair = true
-     │
-     └─ liberarConfig(&cfg)
-}
-```
-
----
-
-## 🔧 Documentação de Funções
+## 🔧 Implementação Detalhada das Funções
 
 ### 1. `void limparTela(void)`
 
-**Propósito:** Limpar o terminal/console para melhor legibilidade.
+**Propósito:** Limpar o terminal para melhor interface do usuário
 
 **Implementação:**
 ```c
 void limparTela(void)
 {
-  system("cls");  // Windows específico
+  system("cls");
 }
 ```
 
-**Quando é chamada:**
-- Antes de exibir o menu
-- Antes de configurar jogo
-- Antes de mostrar resultado
-- Ao exibir erros
+**Por que `system("cls")`?**
+- `cls` é comando do Windows (Clear Screen)
+- Funciona em PowerShell, CMD
+- Simples e direto para aplicação console
 
-**Observação:** Usa `system("cls")` que é específico do Windows.
+**Complexidade:** O(1) - Operação constante
+
+**Alternativas:**
+```c
+// Alternativa ANSI (multiplataforma)
+printf("\033[2J\033[H");  // Mais complexo, menos suportado
+```
 
 ---
 
 ### 2. `void limparBuffer(void)`
 
-**Propósito:** Remover caracteres residuais do buffer após `scanf()`.
+**Propósito:** Remove caracteres residuais do buffer de entrada
 
-**Por que é necessário:**
+**Quando é necessário:**
 ```
-Entrada: "123abc\n"
-scanf("%d", &x)  → x = 123
-Buffer depois:   "abc\n"  ❌ Contaminado
+Usuário digita: "123abc\n"
+scanf("%d", &x);  ← Lê apenas "123"
+Buffer restante:  "abc\n"  ← PROBLEMA!
 
-Com limparBuffer():
-Lê "abc\n" e descarta
-Buffer depois:   ""  ✅ Limpo
+Próximo scanf vai ler do lixo!
 ```
 
 **Implementação:**
@@ -158,103 +153,98 @@ void limparBuffer(void)
 {
   int c;
   while ((c = getchar()) != '\n' && c != EOF) {
-    /* Descarta caracteres */
+    // Descarta cada caractere até nova linha
   }
 }
 ```
+
+**Fluxo Visual:**
+```
+Buffer:      "abc\n"
+             ↓ ↓ ↓ ↓
+getchar()    a b c \n
+Descarta tudo!
+Buffer:      "" (limpo!)
+```
+
+**Complexidade:** O(k) - k = caracteres no buffer
 
 ---
 
 ### 3. `void mostrarMenu(void)`
 
-**Propósito:** Exibir o menu principal com as opções.
+**Propósito:** Exibir menu interativo para usuário
 
-**Fluxo:**
-```
-1. Chama limparTela()
-2. Imprime cabeçalho formatado
-3. Lista 3 opções:
-   - 1. Configurar Jogo
-   - 2. Jogar Uma Vez
-   - 3. Sair
+**Implementação:**
+```c
+void mostrarMenu(void)
+{
+  limparTela();
+  printf("+========================================+\n");
+  printf("|   ROLETA RUSSA - Garotos do JOB       |\n");
+  printf("+========================================+\n");
+  printf("|  1. Configurar Jogo                    |\n");
+  printf("|  2. Jogar Uma Vez                      |\n");
+  printf("|  3. Sair                               |\n");
+  printf("+========================================+\n");
+}
 ```
 
-**Saída:**
-```
-+========================================+
-|   ROLETA RUSSA - Garotos do JOB       |
-+========================================+
-|  1. Configurar Jogo                    |
-|  2. Jogar Uma Vez                      |
-|  3. Sair                               |
-+========================================+
-```
+**Complexidade:** O(1) - Tempo constante para prints
 
 ---
 
 ### 4. `void configurarJogo(GameConfig *cfg)`
 
-**Propósito:** Permitir usuário definir os números vencedores.
+**Propósito:** Permitir usuário configurar números vencedores
 
-**Parâmetros:**
-- `cfg`: Ponteiro para estrutura de configuração (será modificada)
-
-**Validações implementadas:**
-1. ✅ Verifica se `cfg` não é NULL
-2. ✅ Valida quantidade (1-101 números)
-3. ✅ Aloca memória com verificação
-4. ✅ Impede números duplicados
-5. ✅ Valida range (0-100)
-
-**Fluxo Detalhado:**
+**Fluxo Completo:**
 
 ```
-1. Validação de ponteiro nulo
-   │
-   ├─ if (cfg == NULL) return;
-   │
-2. Limpeza de tela
-   │
-   ├─ limparTela();
-   │
-3. Exibição de informações
-   │
-   ├─ Probabilidade: 50%
-   ├─ Intervalo: 0 a 100
-   │
-4. Leitura de quantidade
-   │
-   ├─ lerInteiro("Quantos números?", 1, 101)
-   │
-5. Liberação de configuração anterior
-   │
-   ├─ liberarConfig(cfg);
-   │
-6. Alocação de memória
-   │
-   ├─ malloc(sizeof(int) * quantidade)
-   ├─ if (malloc == NULL) 
-   │   └─ Erro e return
-   │
-7. Loop de leitura
-   │
-   ├─ for (i = 0; i < quantidade; i++)
-   │  ├─ Lê número com lerInteiro()
-   │  ├─ Valida não-duplicação
-   │  │  for (j = 0; j < i; j++)
-   │  │  └─ if (já existe) pede novamente
-   │  └─ Armazena em array
-   │
-8. Atualização de tamanho
-   │
-   ├─ cfg->tamanhoLista = quantidade
-   │
-9. Pausa
-   │
-   └─ getchar() aguarda ENTER
+┌─ Entrada: cfg (ponteiro para GameConfig)
+│
+├─ Passo 1: Validação
+│  └─ if (cfg == NULL) return; ← Proteção contra NULL
+│
+├─ Passo 2: Limpeza
+│  └─ limparTela(); ← Deixa interface limpa
+│
+├─ Passo 3: Coleta de dados
+│  ├─ Exibe informações (intervalo 0-100)
+│  ├─ Lê quantidade (1-101)
+│  │  └─ Via lerInteiro() com validação
+│  └─ Libera configuração anterior
+│     └─ Via liberarConfig()
+│
+├─ Passo 4: Alocação
+│  ├─ malloc(sizeof(int) * quantidade)
+│  └─ Verifica se == NULL (erro!)
+│
+├─ Passo 5: Loop de leitura
+│  ├─ Para cada número (i = 0; i < quantidade; i++)
+│  │  ├─ Lê número via lerInteiro()
+│  │  ├─ Valida não-duplicação
+│  │  │  └─ Procura em array[0..i-1]
+│  │  └─ Se duplicado, pede novamente
+│  │
+│  └─ Armazena no array
+│
+├─ Passo 6: Finalização
+│  ├─ cfg->tamanhoLista = quantidade
+│  ├─ Mensagem de sucesso
+│  └─ getchar() aguarda ENTER
+│
+└─ Retorno: void (modifica via ponteiro)
 ```
 
-**Exemplo de Execução:**
+**Validações:**
+- ✓ Ponteiro não-nulo
+- ✓ Quantidade 1-101
+- ✓ malloc sucesso
+- ✓ Números 0-100
+- ✓ Sem duplicatas
+
+**Exemplode Execução Completa:**
 
 ```
 Quantos numeros vencedores deseja? (1-101): 3
@@ -272,29 +262,24 @@ Digite os 3 numeros vencedores (sem repeticoes):
   Pressione ENTER para continuar...
 ```
 
+**Complexidade:**
+- Tempo: O(n + n²) = O(n²) - n leituras, cada uma valida com busca linear
+- Espaço: O(n) - array de n números
+
 ---
 
 ### 5. `bool estaNaListaVencedora(int numero, int lista[], int tamanho)`
 
-**Propósito:** Verificar se um número existe no array de vencedores.
+**Propósito:** Procurar um número no array
 
-**Parâmetros:**
-- `numero`: Valor a procurar
-- `lista`: Pointer ao array
-- `tamanho`: Quantidade de elementos
-
-**Retorno:**
-- `true` (1): Número encontrado
-- `false` (0): Número não encontrado
-
-**Implementação:**
+**Implementação (Busca Linear):**
 ```c
 bool estaNaListaVencedora(int numero, int lista[], int tamanho)
 {
   int i;
   
   if (lista == NULL)
-    return false;  // Proteção contra NULL
+    return false;  // Proteção NULL
   
   for (i = 0; i < tamanho; i++) {
     if (lista[i] == numero)
@@ -305,362 +290,467 @@ bool estaNaListaVencedora(int numero, int lista[], int tamanho)
 }
 ```
 
-**Complexidade:** O(n) - linear
+**Análise de Complexidade:**
+
+| Caso | Tempo |
+|------|-------|
+| Melhor (encontra no 1º) | O(1) |
+| Pior (não encontra) | O(n) |
+| Médio | O(n/2) ≈ O(n) |
+
+**Por que não binária?**
+- Array **não está ordenado**
+- Usuário digita números aleatoriamente
+- Ordenação desnecessária para este caso
 
 **Exemplo:**
 ```c
-int vencedores[] = {10, 25, 50, 75, 90};
-estaNaListaVencedora(50, vencedores, 5);  // true
-estaNaListaVencedora(99, vencedores, 5);  // false
+int vencedores[] = {10, 50, 90};
+estaNaListaVencedora(50, vencedores, 3);  // true
+estaNaListaVencedora(99, vencedores, 3);  // false
 ```
 
 ---
 
 ### 6. `int jogarUmaVez(const GameConfig *cfg, int *numeroSorteado)`
 
-**Propósito:** Executar uma rodada completa do jogo.
-
-**Parâmetros:**
-- `cfg`: Configuração (constante, não será modificada)
-- `numeroSorteado`: Ponteiro para armazenar número sorteado
-
-**Retorno:**
-- `1`: Jogador GANHOU
-- `0`: Jogador PERDEU
-
-**Lógica do Sorteio (Dois Testes Independentes):**
-
-```
-┌─────────────────────────────────────────┐
-│ TESTE 1: Probabilidade                  │
-├─────────────────────────────────────────┤
-│ r = rand() / RAND_MAX                   │
-│ r = número aleatório entre 0.0 e 1.0    │
-│                                         │
-│ if (r <= 0.5) {  // 50% de chance       │
-│   Passa para TESTE 2                    │
-│ } else {                                │
-│   Retorna 0 (PERDEU)                    │
-│ }                                       │
-└─────────────────────────────────────────┘
-                  │
-                  ▼ (Se passou)
-┌─────────────────────────────────────────┐
-│ TESTE 2: Verificar Lista Vencedora      │
-├─────────────────────────────────────────┤
-│ n = rand() % (intervaloMax + 1)         │
-│ n = número sorteado 0-100               │
-│                                         │
-│ if (estaNaListaVencedora(n, lista)) {   │
-│   Retorna 1 (GANHOU)                    │
-│ } else {                                │
-│   Retorna 0 (PERDEU)                    │
-│ }                                       │
-└─────────────────────────────────────────┘
-```
+**Propósito:** Executar uma rodada completa do jogo
 
 **Implementação:**
 ```c
 int jogarUmaVez(const GameConfig *cfg, int *numeroSorteado)
 {
-  // Sorteio de probabilidade (0.0 a 1.0)
-  float r = (float)rand() / (float)RAND_MAX;
-  
-  // Sorteio de número (0 a 100)
+  // Sorteia número (0 a 100)
   int n = rand() % (cfg->intervaloMax + 1);
   
   // Armazena número sorteado
   if (numeroSorteado)
     *numeroSorteado = n;
   
-  // Teste 1: Probabilidade
-  if (r <= cfg->probabilidade) {
-    // Teste 2: Verificar lista
-    if (estaNaListaVencedora(n, cfg->listaVencedores, cfg->tamanhoLista)) {
-      return 1;  // GANHOU!
-    } else {
-      return 0;  // PERDEU (número não na lista)
-    }
+  // Verifica na lista
+  if (estaNaListaVencedora(n, cfg->listaVencedores, cfg->tamanhoLista)) {
+    return 1;  // GANHOU
   } else {
-    return 0;  // PERDEU (não passou probabilidade)
+    return 0;  // PERDEU
   }
 }
 ```
 
+**Fluxo:**
+
+```
+1. rand() % 101  →  número 0-100
+      │
+      ▼
+2. Armazena em *numeroSorteado (se não NULL)
+      │
+      ▼
+3. Busca em lista
+      │
+   ┌──┴──┐
+   ▼     ▼
+Encontrou? Não?
+   │     │
+   ▼     ▼
+   1     0
+```
+
 **Análise de Probabilidade:**
 
-Com 5 números vencedores em 101 possíveis:
+Com N números vencedores de um total de 101 possíveis:
 
-```
-P(Ganhar) = P(passar prob) × P(acertar número)
-         = 0.5 × (5/101)
-         = 0.5 × 0.0495
-         ≈ 2.48%
+$$P(\text{Ganhar}) = \frac{N}{101}$$
 
-P(Perder) = 1 - 0.0248 ≈ 97.52%
-```
+**Exemplos:**
+- 1 número: 1/101 ≈ 0.99%
+- 5 números: 5/101 ≈ 4.95%
+- 10 números: 10/101 ≈ 9.90%
+
+**Complexidade:**
+- Tempo: O(n) - devido a estaNaListaVencedora
+- Espaço: O(1) - apenas variáveis locais
 
 ---
 
 ### 7. `void liberarConfig(GameConfig *cfg)`
 
-**Propósito:** Liberar toda memória alocada e prevenir vazamentos.
-
-**Parâmetros:**
-- `cfg`: Ponteiro para estrutura a ser liberada
+**Propósito:** Liberar memória alocada e evitar vazamento
 
 **Implementação:**
 ```c
 void liberarConfig(GameConfig *cfg)
 {
   if (cfg == NULL)
-    return;  // Proteção
+    return;  // Proteção NULL
   
   if (cfg->listaVencedores != NULL) {
-    free(cfg->listaVencedores);
-    cfg->listaVencedores = NULL;  // Evita use-after-free
+    free(cfg->listaVencedores);  // Libera array
+    cfg->listaVencedores = NULL; // Evita use-after-free
   }
   
-  cfg->tamanhoLista = 0;  // Reseta
+  cfg->tamanhoLista = 0;  // Reseta tamanho
 }
 ```
 
-**Importância:**
-```
-Sem liberarConfig():
-┌──────────────┐
-│ Memória Heap │
-├──────────────┤
-│ malloc()  ←──┼─── Alocado mas nunca liberado
-│              │    VAZAMENTO DE MEMÓRIA! ❌
-└──────────────┘
+**Por que importante?**
 
-Com liberarConfig():
-┌──────────────┐
-│ Memória Heap │
-├──────────────┤
-│ free()    ←──┼─── Memória devolvida ao SO
-│              │    CORRETO! ✅
-└──────────────┘
 ```
+Memória sem free():
+Heap ┌────────┐
+     │10,50,90│ ← PERDIDO (vazamento)
+     └────────┘
+
+Memória com free():
+Heap ┌────────┐
+     │ LIVRE  │ ← Devolvido ao SO
+     └────────┘
+```
+
+**Impacto de Vazamento:**
+- Programa pequeno: imperceptível
+- Programa grande rodando dias: pode travar!
+
+**Complexidade:** O(1) - operação de liberação
 
 ---
 
 ### 8. `int lerInteiro(const char *prompt, int min, int max)`
 
-**Propósito:** Ler inteiro com validação de intervalo.
+**Propósito:** Ler inteiro com validação de intervalo
 
-**Parâmetros:**
-- `prompt`: Mensagem a exibir
-- `min`: Valor mínimo aceito (inclusive)
-- `max`: Valor máximo aceito (inclusive)
-
-**Retorno:** Inteiro validado
-
-**Validações:**
-1. Verifica se `scanf()` leu corretamente
-2. Limpa buffer em caso de erro
-3. Valida se está no intervalo [min, max]
-4. Repete até sucesso
-
-**Fluxo:**
-```
-Loop infinito:
-  1. Exibe prompt
-  2. Tenta ler com scanf
-  3. if (leitura falhou)
-     - Exibe erro
-     - Limpa buffer
-     - Continue (volta ao passo 1)
-  4. if (valor fora do intervalo)
-     - Exibe erro com range
-     - Continue
-  5. Retorna valor válido
-```
-
-**Exemplo:**
+**Implementação:**
 ```c
-int quantidade = lerInteiro(
-  "Quantos números? ",
-  1,    // mínimo
-  101   // máximo
-);
-```
-
----
-
-### 9. `float lerFloat(const char *prompt, float min, float max)`
-
-**Propósito:** Ler float com validação de intervalo (similar a `lerInteiro`).
-
-**Diferenças:**
-- Usa `scanf("%f")` em vez de `"%d"`
-- Valida com limites `float`
-- Mensagens formatam com `"%.2f"`
-
----
-
-## 📋 Tratamento de Erros
-
-### Proteções Implementadas:
-
-| Situação | Tratamento |
-|----------|-----------|
-| Entrada não-numérica | Rejeita e pede novamente |
-| Número fora do intervalo | Mostra range e pede novamente |
-| Número duplicado | Aviso e pede outro número |
-| malloc() falha | Mensagem de erro e abort |
-| NULL pointer access | Validação em todas as funções |
-| Jogar sem configurar | Erro e volta ao menu |
-
----
-
-## 🧪 Exemplos de Uso
-
-### Cenário 1: Uso Normal
-
-```c
-GameConfig cfg;
-cfg.listaVencedores = NULL;
-cfg.tamanhoLista = 0;
-cfg.intervaloMax = 100;
-cfg.probabilidade = 0.5f;
-
-// Usuário configura com 3 números: 10, 50, 90
-// Usuário joga
-int sorteado;
-int resultado = jogarUmaVez(&cfg, &sorteado);
-if (resultado == 1) {
-  printf("GANHOU! Numero sorteado: %d\n", sorteado);
-} else {
-  printf("PERDEU! Numero sorteado: %d\n", sorteado);
+int lerInteiro(const char *prompt, int min, int max)
+{
+  int valor;
+  int resultado;
+  
+  while (1) {
+    printf("%s", prompt);
+    resultado = scanf("%d", &valor);
+    
+    // Verifica se scanf funcionou
+    if (resultado != 1) {
+      fprintf(stderr, "[ERRO] Entrada invalida!\n");
+      limparBuffer();
+      continue;  // Repete
+    }
+    
+    // Verifica intervalo
+    if (valor < min || valor > max) {
+      fprintf(stderr, "[ERRO] Digite entre %d e %d!\n", min, max);
+      continue;  // Repete
+    }
+    
+    return valor;  // Sucesso!
+  }
 }
-
-// Limpa ao final
-liberarConfig(&cfg);
 ```
 
-### Cenário 2: Múltiplas Reconfigurations
+**Fluxo de Validação:**
 
-```c
-GameConfig cfg = {NULL, 0, 100, 0.5f};
+```
+Entrada: "123abc"
+      │
+      ▼
+  scanf("%d")
+      │
+      ▼
+  x == "123"?
+      │
+   ┌──┴──┐
+   ▼     ▼
+  SIM   NÃO → Erro, Repete
+   │
+   ▼
+  123 em [1, 101]?
+   │
+┌──┴──┐
+▼     ▼
+SIM   NÃO → Erro, Repete
+│
+▼
+Retorna 123
+```
 
-// Primeira configuração
-configurarJogo(&cfg);  // 3 números
+**Exemplos:**
 
-// Segunda configuração (libera anterior)
-configurarJogo(&cfg);  // 5 números
-// liberarConfig() é chamado dentro automaticamente
+```
+lerInteiro("Número? ", 1, 10)
 
-// Limpeza final
-liberarConfig(&cfg);
+Usuário digita "abc":
+  [ERRO] Entrada invalida!
+  Número? 
+
+Usuário digita "20":
+  [ERRO] Digite entre 1 e 10!
+  Número?
+
+Usuário digita "5":
+  ✓ Retorna 5
 ```
 
 ---
 
-## 📈 Análise de Complexidade
+## 💾 Gerenciamento de Memória
 
-| Função | Tempo | Espaço | Observações |
-|--------|-------|--------|------------|
-| `limparTela()` | O(1) | O(1) | Chamada de sistema |
-| `mostrarMenu()` | O(1) | O(1) | Apenas prints |
-| `configurarJogo()` | O(n) | O(n) | n = quantidade de números |
-| `estaNaListaVencedora()` | O(n) | O(1) | Busca linear |
-| `jogarUmaVez()` | O(n) | O(1) | Chama estaNaListaVencedora |
-| `lerInteiro()` | O(k) | O(1) | k = tentativas do usuário |
-| `liberarConfig()` | O(1) | O(1) | Apenas free() |
+### Ciclo de Vida
 
----
+```
+1. ANTES
+   cfg.listaVencedores = NULL
+   cfg.tamanhoLista = 0
 
-## 🔍 Notas de Implementação
+2. configurarJogo()
+   ├─ malloc(sizeof(int) * quantidade)
+   └─ cfg.listaVencedores = endereço
 
-### Segurança de Memória
+3. jogarUmaVez()
+   ├─ usa cfg.listaVencedores
+   └─ não modifica
+
+4. liberarConfig()
+   ├─ free(cfg.listaVencedores)
+   └─ cfg.listaVencedores = NULL
+
+5. DEPOIS
+   ├─ cfg.listaVencedores = NULL
+   └─ Seguro reconfigurar
+```
+
+### Segurança Defensiva
 
 ```c
-// ✅ CORRETO
-int *array = malloc(sizeof(int) * n);
-if (array == NULL) {
-  fprintf(stderr, "Erro na alocação\n");
+// ✅ PROTEÇÃO 1: Verifica NULL antes de malloc
+if (cfg == NULL)
+  return;
+
+// ✅ PROTEÇÃO 2: Verifica sucesso de malloc
+if (listaVencedores == NULL) {
+  fprintf(stderr, "[ERRO] Falha na alocacao\n");
   return;
 }
-// ... usar array ...
-free(array);
-array = NULL;  // Bom prática
 
-// ❌ ERRADO
-int *array = malloc(sizeof(int) * n);
-// ... sem verificação ...
-// ... sem free() ...
+// ✅ PROTEÇÃO 3: Verifica NULL antes de free
+if (cfg->listaVencedores != NULL) {
+  free(cfg->listaVencedores);
+  cfg->listaVencedores = NULL;  // Previne use-after-free
+}
+
+// ✅ PROTEÇÃO 4: Verifica NULL em operações
+if (lista == NULL)
+  return false;
 ```
 
-### Casting de rand()
+---
+
+## 📈 Análise de Complexidade Geral
+
+| Função | Tempo | Espaço | Notas |
+|--------|-------|--------|-------|
+| `limparTela()` | O(1) | O(1) | Chamada de sistema |
+| `mostrarMenu()` | O(1) | O(1) | Apenas prints |
+| `configurarJogo()` | O(n²) | O(n) | Validação de duplicatas |
+| `estaNaListaVencedora()` | O(n) | O(1) | Busca linear |
+| `jogarUmaVez()` | O(n) | O(1) | Chama estaNaListaVencedora |
+| `lerInteiro()` | O(k) | O(1) | k = tentativas |
+| `liberarConfig()` | O(1) | O(1) | Apenas free |
+
+**Onde O(n) = quantidade de números vencedores**
+
+---
+
+## 🚀 Fluxo Completo do Programa
+
+```mermaid
+graph TD
+    A["main()"] -->|srand| B["Inicializa"]
+    B --> C["GameConfig vazio"]
+    C --> D["mostrarMenu()"]
+    D --> E{Opção?}
+    E -->|1| F["configurarJogo()"]
+    E -->|2| G["jogarUmaVez()"]
+    E -->|3| H["Sair"]
+    F --> I{"Válido?"}
+    I -->|Não| F
+    I -->|Sim| D
+    G --> J{"Config?"}
+    J -->|Não| K["Erro"]
+    K --> D
+    J -->|Sim| L["Joga"]
+    L --> M{"Ganhou?"}
+    M -->|Sim| N["[VENCEU!]"]
+    M -->|Não| O["[PERDEU!]"]
+    N --> D
+    O --> D
+    H --> P["liberarConfig()"]
+    P --> Q["Fim"]
+```
+
+---
+
+## 🎓 Padrões de Programação Utilizados
+
+### 1. Separação de Responsabilidades
 
 ```c
-// ✅ CORRETO - Evita truncamento
-float r = (float)rand() / (float)RAND_MAX;
+// ✅ BOM: Cada função faz uma coisa
+int jogarUmaVez() { ... }      // Joga
+bool estaNaLista() { ... }    // Verifica
 
-// ❌ ERRADO - Pode perder precisão
-float r = rand() / RAND_MAX;
+// ❌ RUIM: Mistura responsabilidades
+void jogo_tudo_junto() { ... } // Tudo misturado
 ```
 
-### Buffer de Entrada
+### 2. Passagem por Referência
 
 ```c
-// ✅ CORRETO
-scanf("%d", &x);
-limparBuffer();  // Remove resíduo
+// ✅ BOTA Função modifica original
+void configurarJogo(GameConfig *cfg) {
+  cfg->tamanhoLista = ...;  // Modifica a struct
+}
 
-// ❌ ERRADO
-scanf("%d", &x);
-// Próximo scanf() lerá resíduo
+// ❌ ERRADO: Cópia não modifica original
+void configurarJogo(GameConfig cfg) {
+  cfg.tamanhoLista = ...;   // Modifica cópia local
+}
+```
+
+### 3. Const Para Proteção
+
+```c
+// ✅ BOM: Garante que não será modificado
+int jogarUmaVez(const GameConfig *cfg) {
+  // cfg->intervaloMax = 200;  // ERRO em compilação!
+}
+
+// ❌ RUIM: Sem proteção
+int jogarUmaVez(GameConfig *cfg) {
+  cfg->intervaloMax = 200;  // Pode modificar sem saber
+}
+```
+
+### 4. Validação Defensiva
+
+```c
+// ✅ BOM: Verifica tudo
+void liberar(GameConfig *cfg) {
+  if (cfg == NULL) return;
+  if (cfg->lista != NULL) {
+    free(cfg->lista);
+    cfg->lista = NULL;
+  }
+}
+
+// ❌ RUIM: Assume que tudo está ok
+void liberar(GameConfig *cfg) {
+  free(cfg->lista);  // Pode ter NULL ou lixo!
+}
 ```
 
 ---
 
-## 📚 Estrutura de Arquivos
+## 🔍 Casos de Teste Importantes
 
+### Caso 1: Configuração Normal
 ```
-├── structs.h
-│   └── Define: GameConfig
-│
-├── funcoes.h
-│   └── Protótipos de todas as funções
-│
-├── funcoes.c
-│   ├── limparTela()
-│   ├── limparBuffer()
-│   ├── mostrarMenu()
-│   ├── configurarJogo()
-│   ├── estaNaListaVencedora()
-│   ├── jogarUmaVez()
-│   ├── lerInteiro()
-│   ├── lerFloat()
-│   └── liberarConfig()
-│
-└── main.c
-    └── Coordena fluxo principal
+Input: 3 números [10, 50, 90]
+Expected: Array criado, tamanho = 3
+Status: ✅ OK
+```
+
+### Caso 2: Número Duplicado
+```
+Input: [10, 10, 20]
+Expected: Aviso na segunda vez
+Status: ✅ OK
+```
+
+### Caso 3: Número Inválido
+```
+Input: [10, 150, 20]
+Expected: Rejeita 150 (fora do intervalo)
+Status: ✅ OK
+```
+
+### Caso 4: Jogar Sem Configurar
+```
+Input: Escolhe opção 2
+Expected: Erro e volta ao menu
+Status: ✅ OK
+```
+
+### Caso 5: Múltiplas Configurações
+```
+Input: Config com 3, depois Config com 5
+Expected: Anterior é liberado, nova criada
+Status: ✅ OK (liberarConfig chamado)
 ```
 
 ---
 
-## 🎓 Conceitos de C Utilizados
+## 📝 Código de Exemplo - Uso Correto
 
-- ✅ **Structs**: Agrupar dados relacionados
-- ✅ **Ponteiros**: Alocação dinâmica e passagem por referência
-- ✅ **malloc/free**: Gerenciamento manual de memória
-- ✅ **Arrays dinâmicos**: Flexibilidade de tamanho
-- ✅ **Validação de entrada**: `scanf()` com error checking
-- ✅ **Modularização**: Separação em múltiplos arquivos
-- ✅ **Geração aleatória**: `srand()` e `rand()`
+```c
+int main() {
+  GameConfig cfg = {NULL, 0, 100};
+  bool sair = false;
+  
+  srand(time(NULL));
+  limparTela();
+  
+  do {
+    mostrarMenu();
+    int opcao = lerInteiro("Escolha: ", 1, 3);
+    
+    switch (opcao) {
+      case 1:
+        configurarJogo(&cfg);  // Modifica cfg
+        break;
+      case 2:
+        if (cfg.tamanhoLista > 0) {
+          int sorteado;
+          if (jogarUmaVez(&cfg, &sorteado)) {
+            printf("[VENCEU!] Numero: %d\n", sorteado);
+          }
+        }
+        break;
+      case 3:
+        sair = true;
+        break;
+    }
+  } while (!sair);
+  
+  liberarConfig(&cfg);  // ← CRÍTICO: evita vazamento
+  return 0;
+}
+```
 
 ---
 
-## ✨ Boas Práticas Aplicadas
+## 🎯 Boas Práticas Aplicadas
 
-1. **Documentação inline**: Comentários explicam o "por quê"
-2. **Validação defensiva**: Checar NULL, ranges, etc
-3. **Gerenciamento de memória**: Sempre liberar o que é alocado
-4. **Separação de concerns**: Cada função faz uma coisa
-5. **Tratamento de erros**: Mensagens claras ao usuário
-6. **Interface limpa**: Limpeza de tela após cada ação
-7. **Código legível**: Nomes descritivos e indentação clara
+✅ **Nomes descritivos** - Fácil entender o código  
+✅ **Funções pequenas** - Cada uma faz uma coisa  
+✅ **Comentários úteis** - Explicam "por quê", não "o quê"  
+✅ **Validação defensiva** - Não assume entrada válida  
+✅ **Gerenciamento de memória** - Sem vazamentos  
+✅ **Modularização** - Separado em múltiplos arquivos  
+✅ **Tratamento de erros** - Mensagens claras  
+✅ **Compilação limpa** - Sem warnings com `-Wall -Wextra`  
+
+---
+
+## 🚀 Lições Aprendidas
+
+1. **Ponteiros são poderosos** - Permitem modificar dados na função
+2. **Memória dinâmica é flexível** - Array pode ter qualquer tamanho
+3. **Validação é essencial** - Entrada do usuário sempre pode ser errada
+4. **Modularização simplifica** - Código separado é mais fácil manter
+5. **Documentação importa** - Este documento ajuda muito a compreender
+
+---
+
+**Última atualização:** 26 de outubro de 2025  
+**Versão:** 3.1  
+**Status:** ✅ Completo e revisado

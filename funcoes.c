@@ -9,7 +9,8 @@
 /*
    FUNÇÃO: limparTela
    Descrição: Limpa o terminal/console
-    */
+  */
+
 void limparTela(void)
 {
   /* No Windows, usa o comando 'cls' */
@@ -168,15 +169,13 @@ void configurarJogo(GameConfig *cfg)
   printf("+========================================+\n");
 
   /* Define valores fixos do jogo */
-  cfg->probabilidade = 0.5f; // 50% de chance de passar
-  cfg->intervaloMax = 100;   // Números de 0 a 100
+  cfg->intervaloMax = 100; // Números de 0 a 100
 
-  printf("  - Probabilidade: 50%% (0.5)\n");
   printf("  - Intervalo: 0 a 100\n\n");
 
   /* Lê a quantidade de números vencedores */
   int tamanhoListaVencedores = lerInteiro(
-      "  Quantos numeros vencedores deseja? (1-101): ",
+      "  Quantos numeros vencedores deseja? (1-100): ",
       1,
       cfg->intervaloMax + 1);
 
@@ -269,9 +268,6 @@ bool estaNaListaVencedora(int numero, int lista[], int tamanho)
     */
 int jogarUmaVez(const GameConfig *cfg, int *numeroSorteado)
 {
-  /* Sorteio do valor de probabilidade (0.0 a 1.0) */
-  float r = (float)rand() / (float)RAND_MAX;
-
   /* Sorteio do número inteiro (0 a intervaloMax) */
   int n = rand() % (cfg->intervaloMax + 1);
 
@@ -279,21 +275,12 @@ int jogarUmaVez(const GameConfig *cfg, int *numeroSorteado)
   if (numeroSorteado)
     *numeroSorteado = n;
 
-  /* Verifica se passou no teste de probabilidade */
-  if (r <= cfg->probabilidade)
+  if (estaNaListaVencedora(n, cfg->listaVencedores, cfg->tamanhoLista))
   {
-    /* Passou na probabilidade, agora verifica se está na lista vencedora */
-    if (estaNaListaVencedora(n, cfg->listaVencedores, cfg->tamanhoLista))
-    {
-      return 1; /* Ganhou! */
-    }
-    else
-    {
-      return 0; /* Número não está na lista */
-    }
+    return 1; /* Ganhou! */
   }
   else
   {
-    return 0; /* Não passou no teste de probabilidade */
+    return 0; /* Número não está na lista */
   }
 }
